@@ -6,7 +6,7 @@
 set -euo pipefail
 export base=$(pwd)
 
-BRANCH=development
+BRANCH=devel
 
 sudo apt-get update
 sudo apt-get -qy install bwa make build-essential cmake libncurses-dev ncurses-dev libbz2-dev lzma-dev liblzma-dev \

@@ -1,5 +1,5 @@
 env:
-  - BRANCH=development
+  - BRANCH=devel
 
 before_install:
   - export PATH="$TRAVIS_BUILD_DIR/nim-$BRANCH/bin:$PATH"

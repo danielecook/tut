@@ -9,7 +9,7 @@ set -o nounset
 
 assert_equal 18 12
 
-# Slice
+# slice
 run slice_inf csv slice 5: test/data/*.tsv
 assert_exit_code 0
 assert_no_stderr
