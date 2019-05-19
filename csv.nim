@@ -6,6 +6,9 @@ import strutils
 import tables
 import streams
 
+from posix import signal, SIG_PIPE, SIG_IGN
+signal(SIG_PIPE, SIG_IGN)
+
 proc quit_error*(msg: string, error_code = 1) =
     stderr.write_line "Error".bgWhite.fgRed & fmt": {msg}".fgRed
     quit(error_code)
@@ -98,11 +101,19 @@ proc slice(line_range: string, files: seq[string]) =
     if (":" in line_range) == false:
         quit_error(malformed_msg)
     var range_split = line_range.split(":")
+    var str_start = range_split[0]
+    var str_end = range_split[1]
     if len(range_split) != 2:
         quit_error(malformed_msg)
     try:
-        r_start = parseInt(range_split[0])
-        r_end = parseInt(range_split[1])
+        if str_start == "":
+            r_start = 0
+        else:
+            r_start = parseInt(range_split[0])
+        if str_end == "":
+            r_end = high(int)
+        else:
+            r_end = parseInt(range_split[1])
     except ValueError:
         quit_error(malformed_msg)
     for f in files:

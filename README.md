@@ -12,7 +12,7 @@ Extracts a range from every file
 
 ```
  slice range [files ...]
- ```
+```
 
  Where `range` is the range of lines to keep.
 
