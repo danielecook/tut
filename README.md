@@ -1,5 +1,6 @@
 # csv utilities
 
+[![Build Status](https://travis-ci.org/danielecook/csv-tools.svg?branch=development)](https://travis-ci.org/danielecook/csv-tools)
 
 ## Stack
 

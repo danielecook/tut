@@ -1,0 +1,5 @@
+env:
+  - BRANCH=development
+script: 
+  - nim c -d:release csv.nim
+  - bash functional-tests.sh
