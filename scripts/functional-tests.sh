@@ -1,6 +1,4 @@
 #!/bin/bash
-export PATH=${PATH}:.
-
 test -e ssshtest || wget -q https://raw.githubusercontent.com/ryanlayer/ssshtests/master/ssshtest
 
 . ssshtest
