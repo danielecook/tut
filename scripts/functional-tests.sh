@@ -33,4 +33,4 @@ assert_in_stderr "Malformed range"
 run slice_add_col csv slice -a 0:3 tests/data/*.tsv
 assert_exit_code 0
 assert_in_stdout "filename"
-assert_equal "6" $(cat $STDOUT_FILE | cut -f 1 | uniq | wc -l)
+assert_equal "12" $(cat $STDOUT_FILE | cut -f 1 | uniq | wc -l)
