@@ -90,7 +90,7 @@ proc stack(files: seq[string], sep: var string, output_sep: var string) =
                 header_out = true
             ln += 1
 
-proc slice(line_range: string, files: seq[string]) =
+proc slice(line_range: string, files: seq[string], add_col: bool) =
     var
         r_start: int
         r_end: int
@@ -119,8 +119,15 @@ proc slice(line_range: string, files: seq[string]) =
     for f in files:
         var n = 0
         for line in lines(f):
+            var delim = infer_delim(line)
             if n >= r_start and n <= r_end:
-                echo line
+                if add_col:
+                    if n > 0:
+                        echo line, delim, f
+                    else:
+                        echo line, delim, "filename"
+                else:
+                    echo line
             n += 1
             
 
@@ -147,10 +154,11 @@ proc parse_file_list(fnames: seq[string]): seq[string] =
 
 
 
-var p = newParser("tbl"):
+var p = newParser("csv"):
     help("Table Utilities")
 
     command("slice"):
+        flag("-a", "--add-filename", help="Create a right-most column for the filename")
         arg("range", nargs= 1, help="A range of lines to slice (e.g. 1:20, :31, 30:)")
         arg("files", nargs= -1, help="Path")
         run:
@@ -160,7 +168,7 @@ var p = newParser("tbl"):
                 quit_error("No files specified")
                 quit()
             else:
-                slice(opts.range, parse_file_list(opts.files))
+                slice(opts.range, parse_file_list(opts.files), opts.add_filename)
             quit()
 
     command("stack"):

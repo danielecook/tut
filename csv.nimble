@@ -7,7 +7,7 @@ license       = "MIT"
 
 # Dependencies
 
-requires "argparse >= 0.7.1"
+requires "argparse >= 0.7.1", "colorize"
 
 bin = @["csv"]
 skipDirs = @["test"]
