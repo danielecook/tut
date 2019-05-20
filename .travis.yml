@@ -1,3 +1,4 @@
+language: c
 env:
   - BRANCH=devel
 
@@ -11,3 +12,6 @@ install:
 script: 
   - nim c -d:release csv.nim
   - bash ./scripts/functional-tests.sh
+branches:
+  except:
+    - gh-pages
