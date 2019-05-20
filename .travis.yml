@@ -9,7 +9,7 @@ before_install:
 install:
   - bash ./scripts/install.sh
 
-script: 
+script:
   - nim c -d:release csv.nim
   - bash ./scripts/functional-tests.sh
 branches:

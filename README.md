@@ -24,5 +24,6 @@ Extracts a range from every file
 
 ## TODO
 
+* [ ] select
 * [ ] cut
 * [ ] diff
