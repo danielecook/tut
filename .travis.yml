@@ -10,4 +10,4 @@ install:
 
 script: 
   - nim c -d:release csv.nim
-  - bash functional-tests.sh
+  - bash ./scripts/functional-tests.sh
