@@ -190,10 +190,13 @@ var p = newParser("csv"):
             quit()
 
 
-if commandLineParams().find("--help") > -1 or commandLineParams().find("-h") > -1 or commandLineParams().len == 0:
+if commandLineParams().find("--help") > -1 or commandLineParams().find("-h") > -1 or commandLineParams().len == 0 and commandLineParams().len < 2:
     stderr.write p.help()
     quit()
 else:
-    var opts = p.parse(commandLineParams())
+    try:
+        var opts = p.parse(commandLineParams())
+    except UsageError as E:
+        quit_error(E.msg)
     p.run(commandLineParams())
 
