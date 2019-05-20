@@ -16,7 +16,7 @@ git clone -b $BRANCH --depth 1 git://github.com/nim-lang/nim nim-$BRANCH/
 cd nim-$BRANCH
 sh build_all.sh
 
-export PATH=$PATH:$base/nim-$BRANCH/bin/:$base
+export PATH=$PATH:$base/nim-$BRANCH/bin/
 cd $base
 nimble refresh
 $base/nim-$BRANCH/bin/nimble install -y

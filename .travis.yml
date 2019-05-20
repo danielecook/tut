@@ -11,6 +11,8 @@ install:
 
 script:
   - nim c -d:release csv.nim
+  - chmod +x csv
+  - export PATH="${PATH}:$(pwd)"
   - bash ./scripts/functional-tests.sh
 branches:
   except:
