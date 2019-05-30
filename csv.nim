@@ -5,6 +5,7 @@ import strformat
 import strutils
 import tables
 import streams
+import terminal
 
 from posix import signal, SIG_PIPE, SIG_IGN
 signal(SIG_PIPE, SIG_IGN)
@@ -130,7 +131,8 @@ proc slice(line_range: string, files: seq[string], add_col: bool) =
                     echo line
             n += 1
             
-
+proc select(cols: string, files: seq[string], add_col: bool) =
+    echo 'g'
 
 proc check_file(fname: string): bool =
     if not fileExists(fname):
@@ -157,11 +159,29 @@ proc parse_file_list(fnames: seq[string]): seq[string] =
 var p = newParser("csv"):
     help("Table Utilities")
 
+    command("select"):
+        flag("-a", "--add-filename", help="Create a right-most column for the filename")
+        arg("cols", nargs= 1, help="A comma-delimted list of column numbers or names")
+        arg("files", nargs= -1, help="Path")
+        help("Select columns by name or index")
+        run:
+            echo commandLineParams()
+            if commandLineParams().len == 1:
+                stderr.write p.help()
+            elif opts.files.len == 0:
+                quit_error("No files specified")
+                quit()
+            else:
+                slice(opts.cols, parse_file_list(opts.files), opts.add_filename)
+            quit()
+
     command("slice"):
         flag("-a", "--add-filename", help="Create a right-most column for the filename")
         arg("range", nargs= 1, help="A range of lines to slice (e.g. 1:20, :31, 30:)")
         arg("files", nargs= -1, help="Path")
+        help("Get a range of rows from files")
         run:
+            echo commandLineParams()
             if commandLineParams().len == 1:
                 stderr.write p.help()
             elif opts.files.len == 0:
@@ -179,7 +199,9 @@ var p = newParser("csv"):
         flag("-s", "--slugify", help="Slugify field names")
         flag("-g", "--group", help="Add a column for the source field")
         flag("--debug", help="Debug")
+        help("Combine delimited files by column")
         run:
+            echo commandLineParams()
             if commandLineParams().len == 1:
                 stderr.write p.help()
             elif opts.files.len == 0:
@@ -189,14 +211,25 @@ var p = newParser("csv"):
             stack(file_set, opts.delimiter, opts.outputDelimiter)
             quit()
 
+# Check if input is from pipe
+var input_params = commandLineParams()
+if terminal.isatty(stdin) == false and input_params[input_params.len-1] == "-":
+    input_params[input_params.len-1] = "STDIN"
+elif terminal.isatty(stdin) == false:
+    if input_params.find("-") > -1:
+       input_params[input_params.find("-")] = "STDIN"
+    else:
+        input_params.add("STDIN")
 
-if commandLineParams().find("--help") > -1 or commandLineParams().find("-h") > -1 or commandLineParams().len == 0 and commandLineParams().len < 2:
+if commandLineParams().len == 0:
     stderr.write p.help()
     quit()
 else:
     try:
-        var opts = p.parse(commandLineParams())
+        p.run(input_params)
     except UsageError as E:
+        input_params.add("-h")
+        p.run(input_params)
+    except Exception as E:
         quit_error(E.msg)
-    p.run(commandLineParams())
 
