@@ -54,7 +54,6 @@ proc stack(files: seq[string], sep: var string, output_sep: var string) =
         for col in columns:
             if (col in stack_header) == false:
                 stack_header.add col
-                echo stack_header
 
     if output_sep in ["tab", "tabs", "\t"]:
         output_sep = "\t"
@@ -165,7 +164,6 @@ var p = newParser("csv"):
         arg("files", nargs= -1, help="Path")
         help("Select columns by name or index")
         run:
-            echo commandLineParams()
             if commandLineParams().len == 1:
                 stderr.write p.help()
             elif opts.files.len == 0:
@@ -181,7 +179,6 @@ var p = newParser("csv"):
         arg("files", nargs= -1, help="Path")
         help("Get a range of rows from files")
         run:
-            echo commandLineParams()
             if commandLineParams().len == 1:
                 stderr.write p.help()
             elif opts.files.len == 0:
@@ -201,7 +198,6 @@ var p = newParser("csv"):
         flag("--debug", help="Debug")
         help("Combine delimited files by column")
         run:
-            echo commandLineParams()
             if commandLineParams().len == 1:
                 stderr.write p.help()
             elif opts.files.len == 0:
