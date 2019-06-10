@@ -26,3 +26,9 @@ Extracts a range from every file
 * [ ] select
 * [ ] cut
 * [ ] diff
+
+## Compilation
+
+```
+nim c --cpu:i386 --os:linux --compileOnly tut.nim
+```
