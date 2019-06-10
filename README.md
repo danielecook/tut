@@ -1,11 +1,10 @@
-# csv utilities
+# tut (__T__able-__Ut__ilities)
 
 [![Build Status](https://travis-ci.org/danielecook/csv-utilities.svg?branch=development)](https://travis-ci.org/danielecook/csv-tools)
 
 ## Stack
 
 Stacks datasets together by column.
-
 
 ## Slice
 
