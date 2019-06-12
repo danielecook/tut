@@ -1,4 +1,6 @@
+import os
 import sugar
+import sequtils
 import argparse
 import colorize
 import strformat
@@ -90,7 +92,7 @@ proc stack(files: seq[string], sep: var string, output_sep: var string) =
                 header_out = true
             ln += 1
 
-proc slice(line_range: string, files: seq[string], add_col: bool) =
+proc slice(line_range: string, files: seq[string], add_filename: bool, add_basename: bool) =
     var
         r_start: int
         r_end: int
@@ -121,17 +123,34 @@ proc slice(line_range: string, files: seq[string], add_col: bool) =
         for line in lines(f):
             var delim = infer_delim(line)
             if n >= r_start and n <= r_end:
-                if add_col:
-                    if n > 0:
-                        echo line, delim, f
-                    else:
-                        echo line, delim, "filename"
+                var line_out = @[line]
+                if add_filename or add_basename:
+                    if add_filename:
+                        if n > 0:
+                            line_out.add(f)
+                        else:
+                            line_out.add("filename")
+                    if add_basename:
+                        if n > 0:
+                            line_out.add(os.lastPathPart(f))
+                        else:
+                            line_out.add("basename")
+                    echo line_out.join(delim)
                 else:
                     echo line
             n += 1
             
-proc select(cols: string, files: seq[string], add_col: bool) =
-    echo 'g'
+proc select(cols_string: string, files: seq[string], add_col: bool) =
+    let cols = cols_string.split(",")
+
+    # Determine what type of selection is happening
+    try:
+        var select_cols = cols.map(parseInt)
+        
+
+    except:
+        # Select by column name
+        echo "G"
 
 proc check_file(fname: string): bool =
     if not fileExists(fname):
@@ -160,7 +179,7 @@ var p = newParser("csv"):
 
     command("select"):
         flag("-a", "--add-filename", help="Create a right-most column for the filename")
-        arg("cols", nargs= 1, help="A comma-delimted list of column numbers or names")
+        arg("cols", nargs= 1, help="A comma-delimted list of column numbers or names. Use '0' for everything.")
         arg("files", nargs= -1, help="Path")
         help("Select columns by name or index")
         run:
@@ -170,11 +189,12 @@ var p = newParser("csv"):
                 quit_error("No files specified")
                 quit()
             else:
-                slice(opts.cols, parse_file_list(opts.files), opts.add_filename)
+                select(opts.cols, parse_file_list(opts.files), opts.add_filename)
             quit()
 
     command("slice"):
         flag("-a", "--add-filename", help="Create a right-most column for the filename")
+        flag("-b", "--add-basename", help="Create a right-most column for the basename")
         arg("range", nargs= 1, help="A range of lines to slice (e.g. 1:20, :31, 30:)")
         arg("files", nargs= -1, help="Path")
         help("Get a range of rows from files")
@@ -185,7 +205,7 @@ var p = newParser("csv"):
                 quit_error("No files specified")
                 quit()
             else:
-                slice(opts.range, parse_file_list(opts.files), opts.add_filename)
+                slice(opts.range, parse_file_list(opts.files), opts.add_filename, opts.add_basename)
             quit()
 
     command("stack"):
@@ -209,9 +229,7 @@ var p = newParser("csv"):
 
 # Check if input is from pipe
 var input_params = commandLineParams()
-if terminal.isatty(stdin) == false and input_params[input_params.len-1] == "-":
-    input_params[input_params.len-1] = "STDIN"
-elif terminal.isatty(stdin) == false:
+if terminal.isatty(stdin) == false:
     if input_params.find("-") > -1:
        input_params[input_params.find("-")] = "STDIN"
     else:
