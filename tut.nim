@@ -76,7 +76,7 @@ proc stack(files: seq[string], sep: var string, output_sep: var string) =
                 var cols: seq[string]
                 for x in line.split(sep):
                     cols.add x.strip(chars = {'\"', '\''})
-                for ncol in 0..<header.len:
+                for ncol in 0..<cols.len:
                     match_col = stack_header.find(header[ncol])
                     if match_col > -1:
                         col_out[match_col] = cols[ncol]
@@ -245,5 +245,9 @@ else:
         input_params.add("-h")
         p.run(input_params)
     except Exception as E:
-        quit_error(E.msg)
+        if commandLineParams().find("--debug") > -1:
+            stderr.write_line "Error".bgWhite.fgRed & fmt": {E.msg}".fgRed
+            raise
+        else:
+            quit_error(E.msg)
 
