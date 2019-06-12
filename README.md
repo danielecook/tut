@@ -1,6 +1,6 @@
 # tut (Table-Utilities)
 
-[![Build Status](https://travis-ci.org/danielecook/csv-utilities.svg?branch=development)](https://travis-ci.org/danielecook/tut)
+[![Build Status](https://travis-ci.org/danielecook/tut.svg?branch=development)](https://travis-ci.org/danielecook/tut)
 
 ## Stack
 
