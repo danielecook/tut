@@ -6,6 +6,10 @@
 
 Stacks datasets together by column.
 
+```
+tut stack [files ...]
+```
+
 ## Slice
 
 Extracts a range from every file
