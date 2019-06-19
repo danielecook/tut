@@ -52,13 +52,10 @@ proc stack(files: seq[string], sep: var string, output_sep: var string) =
 
     # Generate stack header and infer delimiters
     for path in files:
-        echo path
         (columns, delim) = parse_header(path, sep)
         for col in columns:
             if col != "" and (col in stack_header) == false:
                 stack_header.add col
-
-    echo stack_header
 
     if output_sep in ["tab", "tabs", "\t"]:
         output_sep = "\t"
