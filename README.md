@@ -24,13 +24,6 @@ Extracts a range from every file
  * `5:` - From the 5th line to the end
  * `3:5` - From the 3rd to the 5th line
 
-
-## TODO
-
-* [ ] select
-* [ ] cut
-* [ ] diff
-
 ## Compilation
 
 ```
