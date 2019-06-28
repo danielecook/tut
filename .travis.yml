@@ -10,8 +10,8 @@ install:
   - bash ./scripts/install.sh
 
 script:
-  - nim c -d:release csv.nim
-  - chmod +x csv
+  - nim c -d:release tut.nim
+  - chmod +x tut
   - export PATH="${PATH}:$(pwd)"
   - bash ./scripts/functional-tests.sh
 branches:
