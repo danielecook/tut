@@ -10,3 +10,8 @@
 `cascade` will be a command that combines datasets by row/col.
 
 It's not quite a `join`, but rather fills in values. Optionally it will allow identification of conflicts.
+
+
+### Select
+
+* parse ranges (e.g. 1-5)
