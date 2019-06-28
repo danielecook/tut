@@ -12,6 +12,13 @@
 It's not quite a `join`, but rather fills in values. Optionally it will allow identification of conflicts.
 
 
+### Slice
+
+* [ ] Take first line of first file only (-y; --header-first-line)
+
 ### Select
 
-* parse ranges (e.g. 1-5)
+* [ ] parse ranges (e.g. 1-5)
+* [ ] negative selection
+
+### head command

@@ -8,6 +8,7 @@ import strutils
 import tables
 import streams
 import terminal
+from math import sum
 
 from posix import signal, SIG_PIPE, SIG_IGN
 signal(SIG_PIPE, SIG_IGN)
@@ -94,7 +95,7 @@ proc add_annotation_cols(line: var seq[string], n: int, add_col: bool, fname: st
                 if add_filename:
                     line.add("filename")
             else:
-                if add_basename and add_basename:
+                if add_basename and add_filename:
                     line[^1] = os.lastPathPart(fname)
                     line[^2] = fname
                 elif add_basename:
@@ -103,13 +104,14 @@ proc add_annotation_cols(line: var seq[string], n: int, add_col: bool, fname: st
                     line[^1] = fname
 
 
-proc stack(files: seq[string], sep: var string, output_sep: var string, add_filename: bool, add_basename: bool) =
+proc stack(files: seq[string], sep: var string, delim_out: var string, header_out: bool, add_basename: bool, add_filename: bool) =
     var
         stack_header: seq[string]
         header: seq[string]
         columns: seq[string]
         delim: string
         match_col: int
+        output_header = header_out
 
     # Generate stack header and infer delimiters
     for path in files:
@@ -117,44 +119,47 @@ proc stack(files: seq[string], sep: var string, output_sep: var string, add_file
         for col in columns:
             if col != "" and (col in stack_header) == false:
                 stack_header.add col
+        add_annotation_cols(stack_header, 0, true, path, add_basename, add_filename)
 
-    if output_sep in ["tab", "tabs", "\t"]:
-        output_sep = "\t"
+    if delim_out in ["tab", "tabs", "\t"]:
+        delim_out = "\t"
     
     # Look for file lists
     #if files.len == 1 and files[0].endsWith(".list"):
     #    files = openFileStream(filename = files[0], mode = fmRead)
     # Collate collumns
-    var header_out = false
     for path in files:
         # Print header
         (header, delim) = parse_header(path)
-        var col_out = newSeq[string](stack_header.len)
+        # Reduce the line out by the length of added columns to prevent
+        # extra blank columns from appearing
+        let anno_col_length = @[add_basename, add_filename].mapIt(cast[int](it)).sum()
+        var line_out = newSeq[string](stack_header.len - anno_col_length)
         var n = 0
         for line in lines(path):
+            add_annotation_cols(line_out, n, false, path, add_basename, add_filename)
             if n > 0:
                 var sep_use = sep
                 var cols: seq[string]
                 for x in line.split(sep):
                     cols.add x.strip(chars = {'\"', '\''})
                 for ncol in 0..<header.len:
-                    match_col = stack_header.find(header[ncol
-                    ])
+                    match_col = stack_header.find(header[ncol]) 
                     if match_col > -1 and ncol <= (cols.len - 1):
-                        col_out[match_col] = cols[ncol]
-                print_row(col_out, output_sep)
+                        line_out[match_col] = cols[ncol]
+                print_row(line_out, delim_out)
             elif n == 0:
                 if sep == "<auto>":
                     sep = infer_delim(line)
-                if output_sep == "<auto>":
-                    output_sep = infer_delim(line)
-            if header_out == false:
+                if delim_out == "<auto>":
+                    delim_out = infer_delim(line)
+            if output_header == true:
                 # Infer line delimiter of first file and output header
-                print_row(stack_header, output_sep)
-                header_out = true
+                print_row(stack_header, delim_out)
+                output_header = false
             n += 1
 
-proc slice(line_range: string, files: seq[string], add_filename: bool, add_basename: bool) =
+proc slice(line_range: string, files: seq[string], add_basename: bool, add_filename: bool) =
     var
         r_start: int
         r_end: int
@@ -173,11 +178,13 @@ proc slice(line_range: string, files: seq[string], add_filename: bool, add_basen
         if str_start == "":
             r_start = 0
         else:
-            r_start = parseInt(range_split[0])
+            # Subtract 1 to make 1-based
+            r_start = parseInt(range_split[0]) - 1
         if str_end == "":
             r_end = high(int)
         else:
-            r_end = parseInt(range_split[1])
+            # Subtract 1 to make 1-based
+            r_end = parseInt(range_split[1]) - 1
     except ValueError:
         quit_error(malformed_msg)
     for f in files:
@@ -186,8 +193,8 @@ proc slice(line_range: string, files: seq[string], add_filename: bool, add_basen
             var delim = infer_delim(line)
             if n >= r_start and n <= r_end:
                 var line_out = @[line]
-                if add_filename or add_basename:
-                    add_annotation_cols(line_out, n, true, f, add_filename, add_basename)
+                if add_basename or add_filename:
+                    add_annotation_cols(line_out, n, true, f, add_basename, add_filename)
                     print_row(line_out, delim)
                 else:
                     print_row(line, delim)
@@ -203,7 +210,7 @@ proc select(cols_string: string, files: seq[string], add_col: bool, sep: string,
     # Determine what type of selection is happening
     try:
         # If all columns are integers, we can simply output cols by index
-        var select_cols = cols.map(parseInt)
+        var select_cols = cols.mapIt(it.parseInt - 1)
 
 
         for file_n in 0..<files.len:
@@ -213,7 +220,7 @@ proc select(cols_string: string, files: seq[string], add_col: bool, sep: string,
             for line in lines(path):
                 # If its the first file, ok to print the column header
                 if file_n == 0 or n > 0:
-                    add_annotation_cols(line_out, n, false, path, add_filename, add_basename)
+                    add_annotation_cols(line_out, n, false, path, add_basename, add_filename)
                     for i in 0..<select_cols.len:
                         line_out[i] = line.split(delim)[select_cols[i]]
                     print_row(line_out, delim)
@@ -247,7 +254,7 @@ proc select(cols_string: string, files: seq[string], add_col: bool, sep: string,
             
             for line in lines(path):
                 if file_n == 0 or n > 0:
-                    add_annotation_cols(line_out, n, false, path, add_filename, add_basename)
+                    add_annotation_cols(line_out, n, false, path, add_basename, add_filename)
                     var current_line = line.split(delim)
                     for col in 0..<column_indices.len:
                         if column_indices[col] > -1:
@@ -292,7 +299,7 @@ var p = newParser("tut"):
         flag("-a", "--add-filename", help="Create a right-most column for the filename")
         flag("-b", "--add-basename", help="Create a right-most column for the basename")
         option("-d", "--delimiter", help="The field separater", default="<auto>")
-        arg("cols", nargs= 1, help="A comma-delimted list of column numbers or names. Use '0' for everything.")
+        arg("cols", nargs= 1, help="A comma-delimted list  of column numbers (1-based) or names. Use '0' for everything.")
         arg("files", nargs= -1, help="Path")
         help("Select columns by name or index")
         run:
@@ -302,13 +309,13 @@ var p = newParser("tut"):
                 quit_error("No files specified")
                 quit()
             else:
-                select(opts.cols, parse_file_list(opts.files), opts.add_filename, opts.delimiter, opts.add_filename, opts.add_basename)
+                select(opts.cols, parse_file_list(opts.files), opts.add_basename, opts.delimiter, opts.add_basename, opts.add_filename)
             quit()
 
     command("slice"):
         flag("-a", "--add-filename", help="Create a right-most column for the filename")
         flag("-b", "--add-basename", help="Create a right-most column for the basename")
-        arg("range", nargs= 1, help="A range of lines to slice (e.g. 1:20, :31, 30:)")
+        arg("range", nargs= 1, help="A range of lines to slice (e.g. 1:20, :31, 30:); 1-based")
         arg("files", nargs= -1, help="Path")
         help("Get a range of rows from files")
         run:
@@ -318,28 +325,30 @@ var p = newParser("tut"):
                 quit_error("No files specified")
                 quit()
             else:
-                slice(opts.range, parse_file_list(opts.files), opts.add_filename, opts.add_basename)
+                slice(opts.range, parse_file_list(opts.files), opts.add_basename, opts.add_filename)
             quit()
 
     command("stack"):
         arg("files", nargs= -1, help="List files to stack")
-        option("-t", "--threads", help="Threads")
         option("-d", "--delimiter", help="The field separater", default="<auto>")
         option("-p", "--output-delimiter", help="Separater to output; Defaults to that found in first file", default="\t")
+        option("-n", "--header", help="Output the header", default="true")
         #flag("-s", "--slugify", help="Slugify field names")
         flag("-a", "--add-filename", help="Create a right-most column for the filename")
         flag("-b", "--add-basename", help="Create a right-most column for the basename")
-        flag("-g", "--group", help="Add a column for the source field")
         flag("--debug", help="Debug")
         help("Combine delimited files by column")
         run:
+            if (opts.header in ["true", "false"]) == false:
+                quit_error("--header must be set to true or false")
+
             if commandLineParams().len == 1:
                 stderr.write p.help()
             elif opts.files.len == 0:
                 quit_error("No files specified")
                 quit()
             var file_set = parse_file_list(opts.files)
-            stack(file_set, opts.delimiter, opts.outputDelimiter, opts.add_filename, opts.add_basename)
+            stack(file_set, opts.delimiter, opts.outputDelimiter, opts.header=="true",  opts.add_basename, opts.add_filename)
             quit()
 
 # Check if input is from pipe
@@ -354,6 +363,12 @@ if commandLineParams().len == 0:
     stderr.write p.help()
     quit()
 else:
+    
+    # Allow for global options to be specified anywhere in CLI
+    if input_params.find("--row-numbers") > -1:
+        input_params = input_params.filterIt(it != "--row-numbers")
+        input_params.insert("--row-numbers", 0)
+
     try:
         var opts = p.parse(input_params)
         if opts.row_numbers:
