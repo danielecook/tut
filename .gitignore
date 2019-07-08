@@ -1,1 +1,6 @@
 nimcache/
+.Rhistory
+.python-version
+.vscode/
+ssshtest
+tut
