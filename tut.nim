@@ -8,10 +8,39 @@ import strutils
 import tables
 import streams
 import terminal
+import memfiles
 from math import sum
 
 from posix import signal, SIG_PIPE, SIG_IGN
 signal(SIG_PIPE, SIG_IGN)
+
+
+proc wc(fn: string): tuple[linec, wordc, bytec: int] =
+  var mf = memfiles.open(fn)
+  var cs: cstring
+  var linec, wordc, bytec: int
+  var inWord: bool
+  var s: string
+  for slice in memSlices(mf):
+    inc(linec)
+    cs = cast[cstring](slice.data)
+    let length = slice.size
+    #s = $slice
+    inc(bytec, length)
+    var j = -1
+    for i in 0..length-1:
+      j = i
+      if cs[i] in WhiteSpace:
+        if inWord == true:
+          inc(wordc)
+          inWord = false
+      else:
+        inWord = true
+    if j >= 0:
+      inc(wordc)
+  result.linec = linec
+  result.wordc = wordc
+  result.bytec = bytec + linec
 
 
 var PRINT_RN = false
@@ -20,12 +49,12 @@ var ROW_NUMBER = 0
 proc print_row(line: seq[string], delim: string) =
     if PRINT_RN:
         if ROW_NUMBER == 0:
-            echo "rn"  & delim & line.join(delim)
+            stdout.write "rn"  & delim & line.join(delim) & "\n"
         else:
-            echo $ROW_NUMBER & delim & line.join(delim)
+            stdout.write $ROW_NUMBER & delim & line.join(delim) & "\n"
         ROW_NUMBER += 1
     else:
-        echo line.join(delim)
+        stdout.write line.join(delim) & "\n"
 
 proc print_row(line: string, delim: string) =
     if PRINT_RN:
@@ -104,7 +133,7 @@ proc add_annotation_cols(line: var seq[string], n: int, add_col: bool, fname: st
                     line[^1] = fname
 
 
-proc stack(files: seq[string], sep: var string, delim_out: var string, header_out: bool, add_basename: bool, add_filename: bool) =
+proc stack(files: seq[string], sep: var string, delim_out: var string, header_out: bool, add_basename: var bool, add_filename: var bool) =
     var
         stack_header: seq[string]
         header: seq[string]
@@ -112,6 +141,8 @@ proc stack(files: seq[string], sep: var string, delim_out: var string, header_ou
         delim: string
         match_col: int
         output_header = header_out
+        add_col = true
+        anno_added = false
 
     # Generate stack header and infer delimiters
     for path in files:
@@ -119,7 +150,10 @@ proc stack(files: seq[string], sep: var string, delim_out: var string, header_ou
         for col in columns:
             if col != "" and (col in stack_header) == false:
                 stack_header.add col
-        add_annotation_cols(stack_header, 0, true, path, add_basename, add_filename)
+        if anno_added == false:
+            add_annotation_cols(stack_header, 0, add_col, path, add_basename, add_filename)
+            anno_added = true
+
 
     if delim_out in ["tab", "tabs", "\t"]:
         delim_out = "\t"
@@ -136,7 +170,9 @@ proc stack(files: seq[string], sep: var string, delim_out: var string, header_ou
         let anno_col_length = @[add_basename, add_filename].mapIt(cast[int](it)).sum()
         var line_out = newSeq[string](stack_header.len - anno_col_length)
         var n = 0
-        for line in lines(path):
+        var mm: MemFile
+        mm = memfiles.open(path, mode=fmWrite, mappedSize = -1)
+        for line in lines(mm):
             add_annotation_cols(line_out, n, false, path, add_basename, add_filename)
             if n > 0:
                 var sep_use = sep
@@ -206,6 +242,8 @@ proc select(cols_string: string, files: seq[string], add_col: bool, sep: string,
     var columns: seq[string]
     var line_out = newSeq[string](cols.len)
     var added_header = false
+    var line: string
+
 
     # Determine what type of selection is happening
     try:
@@ -216,15 +254,17 @@ proc select(cols_string: string, files: seq[string], add_col: bool, sep: string,
         for file_n in 0..<files.len:
             var path = files[file_n]
             (columns, delim) = parse_header(path, sep)
-            var n = 0
-            for line in lines(path):
+            var file = newFileStream(path, fmRead)
+            defer: file.close()
+            for line in lines(file):
+                echo line
                 # If its the first file, ok to print the column header
-                if file_n == 0 or n > 0:
-                    add_annotation_cols(line_out, n, false, path, add_basename, add_filename)
-                    for i in 0..<select_cols.len:
-                        line_out[i] = line.split(delim)[select_cols[i]]
-                    print_row(line_out, delim)
-                n += 1
+                #if file_n == 0 or n > 0:
+                #    add_annotation_cols(line_out, n, false, path, add_basename, add_filename)
+                #    for i in 0..<select_cols.len:
+                #        line_out[i] = ($line).split(delim)[select_cols[i]]
+                #    print_row(line_out, delim)
+                #n += 1
 
     except ValueError:
         #[
@@ -251,7 +291,7 @@ proc select(cols_string: string, files: seq[string], add_col: bool, sep: string,
                         column_indices[col] = -1
                         # Show user warning here?
                         discard
-            
+
             for line in lines(path):
                 if file_n == 0 or n > 0:
                     add_annotation_cols(line_out, n, false, path, add_basename, add_filename)
@@ -347,8 +387,15 @@ var p = newParser("tut"):
             elif opts.files.len == 0:
                 quit_error("No files specified")
                 quit()
-            var file_set = parse_file_list(opts.files)
-            stack(file_set, opts.delimiter, opts.outputDelimiter, opts.header=="true",  opts.add_basename, opts.add_filename)
+            var file_set: seq[string]
+            for fname in opts.files:
+                if '*' in fname:
+                    for ls_file in os.walkFiles(fname):
+                        file_set.add(ls_file)
+                else:
+                    file_set.add(fname)
+            var file_set_checked = parse_file_list(file_set)
+            stack(file_set_checked, opts.delimiter, opts.outputDelimiter, opts.header=="true",  opts.add_basename, opts.add_filename)
             quit()
 
 # Check if input is from pipe
