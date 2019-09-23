@@ -8,6 +8,7 @@ import strutils
 import tables
 import streams
 import terminal
+import parseutils
 import memfiles
 from math import sum
 
@@ -15,32 +16,6 @@ from posix import signal, SIG_PIPE, SIG_IGN
 signal(SIG_PIPE, SIG_IGN)
 
 
-proc wc(fn: string): tuple[linec, wordc, bytec: int] =
-  var mf = memfiles.open(fn)
-  var cs: cstring
-  var linec, wordc, bytec: int
-  var inWord: bool
-  var s: string
-  for slice in memSlices(mf):
-    inc(linec)
-    cs = cast[cstring](slice.data)
-    let length = slice.size
-    #s = $slice
-    inc(bytec, length)
-    var j = -1
-    for i in 0..length-1:
-      j = i
-      if cs[i] in WhiteSpace:
-        if inWord == true:
-          inc(wordc)
-          inWord = false
-      else:
-        inWord = true
-    if j >= 0:
-      inc(wordc)
-  result.linec = linec
-  result.wordc = wordc
-  result.bytec = bytec + linec
 
 
 var PRINT_RN = false
@@ -235,7 +210,42 @@ proc slice(line_range: string, files: seq[string], add_basename: bool, add_filen
                 else:
                     print_row(line, delim)
             n += 1
-            
+
+
+proc wc(fn: string): tuple[linec, wordc, bytec: int] =
+    # https://github.com/nim-lang/Nim/issues/9026#issuecomment-423632254
+    var mf = memfiles.open(fn)
+    var cs: cstring
+    var linec, wordc, bytec: int
+    var inWord: bool
+    var s: string
+    for slice in memSlices(mf):
+      inc(linec)
+      cs = cast[cstring](slice.data)
+      let length = slice.size
+      inc(bytec, length)
+      var j = -1
+      for i in 0..length-1:
+        j = i
+        if cs[i] in WhiteSpace:
+          if inWord == true:
+            inc(wordc)
+            inWord = false
+        else:
+          inWord = true
+      if j >= 0:
+        inc(wordc)
+    result.linec = linec
+    result.wordc = wordc
+    result.bytec = bytec + linec
+
+proc count_n(files: seq[string], add_basename: bool, add_filename: bool) =
+    for i in files:
+        var result = wc(i)
+        echo &"{result.linec}\t{result.wordc}\t{result.bytec}"
+
+
+
 proc select(cols_string: string, files: seq[string], add_col: bool, sep: string, add_basename: bool, add_filename: bool) =
     let cols = cols_string.split(",")
     var delim: string
@@ -294,7 +304,7 @@ proc select(cols_string: string, files: seq[string], add_col: bool, sep: string,
 
             for line in lines(path):
                 if file_n == 0 or n > 0:
-                    add_annotation_cols(line_out, n, false, path, add_basename, add_filename)
+                    #add_annotation_cols(line_out, n, false, path, add_basename, add_filename)
                     var current_line = line.split(delim)
                     for col in 0..<column_indices.len:
                         if column_indices[col] > -1:
@@ -366,6 +376,21 @@ var p = newParser("tut"):
                 quit()
             else:
                 slice(opts.range, parse_file_list(opts.files), opts.add_basename, opts.add_filename)
+            quit()
+
+    command("count"):
+        flag("-a", "--add-filename", help="Create a right-most column for the filename")
+        flag("-b", "--add-basename", help="Create a right-most column for the basename")
+        arg("files", nargs= -1, help="Path")
+        help("Count the number of records in a file")
+        run:
+            if commandLineParams().len == 1:
+                stderr.write p.help()
+            elif opts.files.len == 0:
+                quit_error("No files specified")
+                quit()
+            else:
+                count_n(parse_file_list(opts.files), opts.add_basename, opts.add_filename)
             quit()
 
     command("stack"):
