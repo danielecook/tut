@@ -40,12 +40,12 @@ __Stacked df1.tsv df2.tsv__
 You can also attach the basename of the file it came from to keep track of
 where data is coming from.
 
-| brand   | model   |   mpg | basename   | car   | color   | basename   |
-|:--------|:--------|------:|:-----------|:------|:--------|:-----------|
-| tesla   | 3       |     0 |            |       |         | df1.tsv    |
-| toyota  | previa  |    15 |            |       |         | df1.tsv    |
-|         |         |    20 |            | ford  | red     | df2.tsv    |
-|         |         |    15 |            | chevy | blue    | df2.tsv    |
+| brand   | model   |   mpg | car   | color   | basename   |
+|:--------|:--------|------:|:------|:--------|:-----------|
+| tesla   | 3       |     0 |       |         | df1.tsv    |
+| toyota  | previa  |    15 |       |         | df1.tsv    |
+|         |         |    20 | ford  | red     | df2.tsv    |
+|         |         |    15 | chevy | blue    | df2.tsv    |
 
 I frequently use this tool to combine datasets of separate samples for comparison.
 
@@ -79,6 +79,7 @@ tut select mpg,cyl tests/data/df1.tsv
 |  21   |     6 |
 |  22.8 |     4 |
 | ... | ... |
+
 
 ## Global Options
 
