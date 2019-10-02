@@ -19,7 +19,7 @@ __df1.tsv__
 
 __df2.tsv__
 
-| car   |   mpg | color   |
+| brand |   mpg | color   |
 |:------|------:|:--------|
 | ford  |    20 | red     |
 | chevy |    15 | blue    |
@@ -30,22 +30,22 @@ tut stack df1.tsv df2.tsv
 
 __Stacked df1.tsv df2.tsv__
 
-| brand   | model   |   mpg | car   | color   |
-|:--------|:--------|------:|:------|:--------|
-| tesla   | 3       |     0 |       |         |
-| toyota  | previa  |    15 |       |         |
-|         |         |    20 | ford  | red     |
-|         |         |    15 | chevy | blue    |
+| brand   | model   |   mpg | color   |
+|:--------|:--------|------:|:--------|
+| tesla   | 3       |     0 |         |
+| toyota  | previa  |    15 |         |
+| ford    |         |    20 | red     |
+| chevy   |         |    15 | blue    |
 
 You can also attach the basename of the file it came from to keep track of
 where data is coming from.
 
-| brand   | model   |   mpg | car   | color   | basename   |
-|:--------|:--------|------:|:------|:--------|:-----------|
-| tesla   | 3       |     0 |       |         | df1.tsv    |
-| toyota  | previa  |    15 |       |         | df1.tsv    |
-|         |         |    20 | ford  | red     | df2.tsv    |
-|         |         |    15 | chevy | blue    | df2.tsv    |
+| brand   | model   |   mpg | color   | basename   |
+|:--------|:--------|------:|:--------|:-----------|
+| tesla   | 3       |     0 |         | df1.tsv    |
+| toyota  | previa  |    15 |         | df1.tsv    |
+| ford    |         |    20 | red     | df2.tsv    |
+| chevy   |         |    15 | blue    | df2.tsv    |
 
 I frequently use this tool to combine datasets of separate samples for comparison.
 
