@@ -214,6 +214,7 @@ proc slice(line_range: string, files: seq[string], add_basename: bool, add_filen
 
 proc wc(fn: string): tuple[linec, wordc, bytec: int] =
     # https://github.com/nim-lang/Nim/issues/9026#issuecomment-423632254
+    # Fast wordcount
     var mf = memfiles.open(fn)
     var cs: cstring
     var linec, wordc, bytec: int
@@ -240,11 +241,14 @@ proc wc(fn: string): tuple[linec, wordc, bytec: int] =
     result.bytec = bytec + linec
 
 proc count_n(files: seq[string], add_basename: bool, add_filename: bool) =
-    for i in files:
-        var result = wc(i)
-        echo &"{result.linec}\t{result.wordc}\t{result.bytec}"
-
-
+    for fname in files:
+        var result = wc(fname)
+        var output = &"{result.linec}\t{result.wordc}\t{result.bytec}" 
+        if add_basename:
+            output = output & &"\t{os.lastPathPart(fname)}"
+        if add_filename:
+            output = output & &"\t{fname}"
+        echo output
 
 proc select(cols_string: string, files: seq[string], add_col: bool, sep: string, add_basename: bool, add_filename: bool) =
     let cols = cols_string.split(",")
@@ -319,7 +323,7 @@ proc select(cols_string: string, files: seq[string], add_col: bool, sep: string,
 
 
 proc check_file(fname: string): bool =
-    if not fileExists(fname):
+    if fname.existsFile() and not fileExists(fname):
         quit_error(fmt"{fname} does not exist or is not readable")
         return false
     return true
@@ -334,7 +338,7 @@ proc parse_file_list(fnames: seq[string]): seq[string] =
                 if check_file(line):
                     fnames_set.add line
         else:
-            if check_file(path):
+            if check_file(path) and path.existsFile():
                 fnames_set.add path
     return fnames_set
 

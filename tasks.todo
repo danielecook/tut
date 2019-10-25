@@ -22,3 +22,15 @@ It's not quite a `join`, but rather fills in values. Optionally it will allow id
 * [ ] negative selection
 
 ### head command
+
+### Describe
+
+### Sheets
+
+* [ ] Google Sheets integration; Pipe dataset to google sheets
+* [ ] Retrieve dataset from google sheets
+
+
+### diff
+
+* [ ] CSV Diff
