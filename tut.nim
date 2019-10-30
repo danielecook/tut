@@ -426,6 +426,34 @@ var p = newParser("tut"):
             var file_set_checked = parse_file_list(file_set)
             stack(file_set_checked, opts.delimiter, opts.outputDelimiter, opts.header=="true",  opts.add_basename, opts.add_filename)
             quit()
+    command("cascade"):
+        arg("files", nargs= -1, help="List files to cascade")
+        option("-d", "--delimiter", help="The field separater", default="<auto>")
+        option("-p", "--output-delimiter", help="Separater to output; Defaults to that found in first file", default="\t")
+        option("-k", "--keys", help="Select keys", default="true")
+        flag("-a", "--add-filename", help="Create a right-most column for the filename")
+        flag("-b", "--add-basename", help="Create a right-most column for the basename")
+        flag("--debug", help="Debug")
+        help("Combine delimited files by column")
+        run:
+            if (opts.header in ["true", "false"]) == false:
+                quit_error("--header must be set to true or false")
+
+            if commandLineParams().len == 1:
+                stderr.write p.help()
+            elif opts.files.len == 0:
+                quit_error("No files specified")
+                quit()
+            var file_set: seq[string]
+            for fname in opts.files:
+                if '*' in fname:
+                    for ls_file in os.walkFiles(fname):
+                        file_set.add(ls_file)
+                else:
+                    file_set.add(fname)
+            var file_set_checked = parse_file_list(file_set)
+            stack(file_set_checked, opts.delimiter, opts.outputDelimiter, opts.header=="true",  opts.add_basename, opts.add_filename)
+            quit()
 
 # Check if input is from pipe
 var input_params = commandLineParams()
