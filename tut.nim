@@ -345,7 +345,8 @@ proc parse_file_list(fnames: seq[string], skip_empty = false): seq[string] =
         fnames_set = fnames_set.filterIt(it.getFileSize() > 0)
     else:
         let empty_files = fnames_set.filterIt(it.getFileSize() == 0)
-        quit_error(fmt"""There are empty file(s): {empty_files.join(", ")}""", 1)
+        if empty_files.len > 0:
+            quit_error(fmt"""There are empty file(s): {empty_files.join(", ")}""", 1)
     return fnames_set
 
 
