@@ -329,7 +329,7 @@ proc check_file(fname: string): bool =
     return true
 
 
-proc parse_file_list(fnames: seq[string]): seq[string] =
+proc parse_file_list(fnames: seq[string], skip_empty = false): seq[string] =
     var fnames_set: seq[string]
     for path in fnames:
         if path.endsWith(".list"):
@@ -340,6 +340,12 @@ proc parse_file_list(fnames: seq[string]): seq[string] =
         else:
             if check_file(path) and path.existsFile():
                 fnames_set.add path
+    # filter empty files if ignore-empty
+    if skip_empty:
+        fnames_set = fnames_set.filterIt(it.getFileSize() > 0)
+    else:
+        let empty_files = fnames_set.filterIt(it.getFileSize() == 0)
+        quit_error(fmt"""There are empty file(s): {empty_files.join(", ")}""", 1)
     return fnames_set
 
 
@@ -402,7 +408,7 @@ var p = newParser("tut"):
         option("-d", "--delimiter", help="The field separater", default="<auto>")
         option("-p", "--output-delimiter", help="Separater to output; Defaults to that found in first file", default="\t")
         option("-n", "--header", help="Output the header", default="true")
-        #flag("-s", "--slugify", help="Slugify field names")
+        flag("-i", "--skip-empty", help="Skip over empty files")
         flag("-a", "--add-filename", help="Create a right-most column for the filename")
         flag("-b", "--add-basename", help="Create a right-most column for the basename")
         flag("--debug", help="Debug")
@@ -423,7 +429,7 @@ var p = newParser("tut"):
                         file_set.add(ls_file)
                 else:
                     file_set.add(fname)
-            var file_set_checked = parse_file_list(file_set)
+            var file_set_checked = parse_file_list(file_set, opts.skipEmpty)
             stack(file_set_checked, opts.delimiter, opts.outputDelimiter, opts.header=="true",  opts.add_basename, opts.add_filename)
             quit()
     command("cascade"):
@@ -436,8 +442,8 @@ var p = newParser("tut"):
         flag("--debug", help="Debug")
         help("Combine delimited files by column")
         run:
-            if (opts.header in ["true", "false"]) == false:
-                quit_error("--header must be set to true or false")
+            #if (opts.header in ["true", "false"]) == false:
+            #    quit_error("--header must be set to true or false")
 
             if commandLineParams().len == 1:
                 stderr.write p.help()
@@ -452,7 +458,7 @@ var p = newParser("tut"):
                 else:
                     file_set.add(fname)
             var file_set_checked = parse_file_list(file_set)
-            stack(file_set_checked, opts.delimiter, opts.outputDelimiter, opts.header=="true",  opts.add_basename, opts.add_filename)
+            #stack(file_set_checked, opts.delimiter, opts.outputDelimiter, opts.header=="true",  opts.add_basename, opts.add_filename)
             quit()
 
 # Check if input is from pipe
