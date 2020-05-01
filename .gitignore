@@ -4,3 +4,7 @@ nimcache/
 .vscode/
 ssshtest
 tut
+.DS_Store
+benchmarks/
+stack_test
+.data/

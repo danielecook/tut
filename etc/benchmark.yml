@@ -1,0 +1,9 @@
+name: benchmarks
+channels:
+    - conda-forge
+    - bioconda
+    - defaults
+dependencies:
+    - rxsv=0.13.0
+    - csvtk=0.20.0
+    - hyperfine=1.9.0
