@@ -4,9 +4,11 @@ set -e
 
 
 function cleanup {
-    rm out.select.txt
+    rm -f "${PARENT_DIR}/out.select.txt"
 }
+
 trap cleanup EXIT
+
 PARENT_DIR="$(git rev-parse --show-toplevel)" 
 cd "${PARENT_DIR}" || exit 1
 nimble build
