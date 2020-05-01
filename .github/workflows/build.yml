@@ -48,6 +48,7 @@ jobs:
 
     - name: Install bc
       shell: bash
+      if: runner.os == 'Linux'
       run: sudo apt-get install bc
 
     - name: Functional Tests
