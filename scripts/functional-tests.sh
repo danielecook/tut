@@ -4,7 +4,7 @@ test -e ssshtest || wget -q https://raw.githubusercontent.com/ryanlayer/ssshtest
 . ssshtest
 
 PARENT_DIR="$(git rev-parse --show-toplevel)"
-export PATH="${PATH}:${PARENT_DIR}"
+export PATH="${PARENT_DIR}:${PATH}"
 
 set -o nounset
 
@@ -86,8 +86,8 @@ assert_in_stdout "basename"
 assert_equal "$(line_count "${STDOUT_FILE}")" "31"
 
 run stack_2 tut stack -a --header=false tests/data/*.tsv
-assert_equal "$(cat line_count "${STDOUT_FILE}")" "30"
-assert_equal "$(cat cut -f 2 "${STDOUT_FILE}" | head -n 23 | paste -sd+ | bc)" "454.8"
+assert_equal "$(line_count "${STDOUT_FILE}")" "30"
+assert_equal "$(cut -f 2 "${STDOUT_FILE}" | head -n 23 | paste -sd+ - | bc)" "454.8"
 
 run stack_gzip_1 tut stack -b tests/data/*.tsv.gz
 assert_in_stdout "model"
@@ -103,9 +103,9 @@ assert_equal "$(cat "${STDOUT_FILE}" | line_count)" "31"
 
 run stack_gzip_2 tut stack -a --header=false tests/data/*.tsv.gz
 assert_equal "$(line_count "${STDOUT_FILE}")" "30"
-assert_equal "$(cut -f 2 "${STDOUT_FILE}" | head -n 23 | paste -sd+ | bc)" "454.8"
+assert_equal "$(cut -f 2 "${STDOUT_FILE}" | head -n 23 | paste -sd+ - | bc)" "454.8"
 
 # Mix tsv and tsv.gz
 run stack_mix tut stack -a --header=false tests/data/df1.tsv.gz tests/data/df2.tsv tests/data/df3.tsv
 assert_equal "$(line_count "${STDOUT_FILE}")" "30"
-assert_equal "$(cut -f 2 "${STDOUT_FILE}"| head -n 23 | paste -sd+ | bc)" "454.8"
+assert_equal "$(cut -f 2 "${STDOUT_FILE}"| head -n 23 | paste -sd+ - | bc)" "454.8"

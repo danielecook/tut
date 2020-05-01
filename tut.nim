@@ -70,7 +70,6 @@ proc parse_header(path: string, delim = "<auto>"): (seq[string], string) =
     var f = helpers.stream_file(path)
     if not isNil(f):
         var line = f.readLine()
-        f.close()
         if delim == "<auto>":
             sep = infer_delim(line)
         else:
@@ -78,7 +77,7 @@ proc parse_header(path: string, delim = "<auto>"): (seq[string], string) =
         var c: uint32 = 0
         for x in line.split(sep):
             parsed_header.add(x.strip(chars = {'\"', '\''}))
-    #close(f)
+    defer: f.close()
     return (parsed_header, sep)
 
 proc add_annotation_cols(line: var seq[string], n: int, add_col: bool, fname: string, add_basename: bool, add_filename: bool) =
@@ -259,7 +258,8 @@ proc select(cols_string: string, files: seq[string], add_col: bool, sep: string,
     var line_out = newSeq[string](cols.len)
     var added_header = false
     var line: string
-
+    var n = 0
+    
     # Determine what type of selection is happening
     try:
         # If all columns are integers, we can simply output cols by index
@@ -268,17 +268,16 @@ proc select(cols_string: string, files: seq[string], add_col: bool, sep: string,
         for file_n in 0..<files.len:
             var path = files[file_n]
             (columns, delim) = parse_header(path, sep)
-            var file = stream_file(path)
-            defer: file.close()
-            for line in lines(file):
+            var file = helpers.stream_file(path)
+            for line in file.lines:
                 echo line
                 # If its the first file, ok to print the column header
-                #if file_n == 0 or n > 0:
-                #    add_annotation_cols(line_out, n, false, path, add_basename, add_filename)
-                #    for i in 0..<select_cols.len:
-                #        line_out[i] = ($line).split(delim)[select_cols[i]]
-                #    print_row(line_out, delim)
-                #n += 1
+                if file_n == 0 or n > 0:
+                   add_annotation_cols(line_out, n, false, path, add_basename, add_filename)
+                   for i in 0..<select_cols.len:
+                       line_out[i] = ($line).split(delim)[select_cols[i]]
+                   print_row(line_out, delim)
+            n += 1
 
     except ValueError:
         #[
@@ -290,7 +289,6 @@ proc select(cols_string: string, files: seq[string], add_col: bool, sep: string,
 
 
         for file_n in 0..<files.len:
-            var n = 0
             var path = files[file_n]
             (columns, delim) = parse_header(path, sep)
 
@@ -306,9 +304,9 @@ proc select(cols_string: string, files: seq[string], add_col: bool, sep: string,
                         # Show user warning here?
                         discard
 
-            for line in lines(path):
+            for line in stream_file(path).lines:
                 if file_n == 0 or n > 0:
-                    #add_annotation_cols(line_out, n, false, path, add_basename, add_filename)
+                    add_annotation_cols(line_out, n, false, path, add_basename, add_filename)
                     var current_line = line.split(delim)
                     for col in 0..<column_indices.len:
                         if column_indices[col] > -1:
