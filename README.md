@@ -1,3 +1,5 @@
+![Build & Test](https://github.com/danielecook/tut/workflows/Build%20&%20Test/badge.svg) ![Benchmark](https://github.com/danielecook/tut/workflows/Benchmark/badge.svg)
+
 # tut (Table-Utilities)
 
 [![Build Status](https://travis-ci.org/danielecook/tut.svg?branch=development)](https://travis-ci.org/danielecook/tut)
