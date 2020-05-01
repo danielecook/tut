@@ -2,8 +2,6 @@
 
 # tut (Table-Utilities)
 
-[![Build Status](https://travis-ci.org/danielecook/tut.svg?branch=development)](https://travis-ci.org/danielecook/tut)
-
 ## Stack
 
 Stacks datasets together by column. For example:
