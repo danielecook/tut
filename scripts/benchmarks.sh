@@ -1,22 +1,30 @@
 #!/bin/bash
 # Move to the top level
-nim c -d:release tut.nim
-cd `git rev-parse --show-toplevel`
-wget http://burntsushi.net/stuff/worldcitiespop_mil.csv
+set -e
 
-export PATH=${PATH}:`pwd`
 
-time xsv select 2 worldcitiespop_mil.csv > out.xsv.txt
-# real	0m0.240s
-# user	0m0.169s
-# sys	0m0.035s
-time tut select 2 worldcitiespop_mil.csv > out.tut.txt
+function cleanup {
+    rm out.select.txt
+}
+trap cleanup EXIT
+PARENT_DIR="$(git rev-parse --show-toplevel)" 
+cd "${PARENT_DIR}" || exit 1
+nimble build
 
-# Initial version
-# real	0m15.913s
-# user	0m11.606s
-# sys	0m4.017s
+# Download test data
+mkdir -p "${PARENT_DIR}/.data" && cd "${PARENT_DIR}./data"
+if ! test -s "${PARENT_DIR}/.data/worldcitiespop_mil.csv"; then
+    wget http://burntsushi.net/stuff/worldcitiespop_mil.csv
+fi;
 
-# real	0m10.843s
-# user	0m10.592s
-# sys	0m0.145s
+mkdir -p "${PARENT_DIR}/benchmarks" && cd "${PARENT_DIR}/benchmarks"
+
+export PATH="${PATH}:${PARENT_DIR}"
+
+# Select a column
+hyperfine --export-csv "benchmarks/select.benchmarks.csv" \
+          --export-markdown "benchmarks/select.md" \
+          --runs 10 \
+         "xsv select 2 worldcitiespop_mil.csv > out.select.txt" \
+         "tut select 2 worldcitiespop_mil.csv > out.select.txt" \
+         "csvtk cut -f 2 worldcitiespop_mil.csv > out.select.txt"

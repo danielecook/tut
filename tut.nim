@@ -12,6 +12,10 @@ import parseutils
 import memfiles
 from math import sum
 
+
+
+import src/helpers
+
 from posix import signal, SIG_PIPE, SIG_IGN
 signal(SIG_PIPE, SIG_IGN)
 
@@ -63,7 +67,7 @@ proc parse_header(path: string, delim = "<auto>"): (seq[string], string) =
     # TODO: Extend to examine top N lines
     var parsed_header: seq[string]
     var sep: string
-    var f = openFileStream(filename = path, mode = fmRead)
+    var f = helpers.stream_file(path)
     if not isNil(f):
         var line = f.readLine()
         f.close()
@@ -74,6 +78,7 @@ proc parse_header(path: string, delim = "<auto>"): (seq[string], string) =
         var c: uint32 = 0
         for x in line.split(sep):
             parsed_header.add(x.strip(chars = {'\"', '\''}))
+    #close(f)
     return (parsed_header, sep)
 
 proc add_annotation_cols(line: var seq[string], n: int, add_col: bool, fname: string, add_basename: bool, add_filename: bool) =
@@ -108,7 +113,7 @@ proc add_annotation_cols(line: var seq[string], n: int, add_col: bool, fname: st
                     line[^1] = fname
 
 
-proc stack(files: seq[string], sep: var string, delim_out: var string, header_out: bool, add_basename: var bool, add_filename: var bool) =
+proc stack(files: seq[string], sep: var string, delim_out: var string, skip_empty_lines: bool, header_out: bool, add_basename: var bool, add_filename: var bool) =
     var
         stack_header: seq[string]
         header: seq[string]
@@ -129,14 +134,10 @@ proc stack(files: seq[string], sep: var string, delim_out: var string, header_ou
             add_annotation_cols(stack_header, 0, add_col, path, add_basename, add_filename)
             anno_added = true
 
-
     if delim_out in ["tab", "tabs", "\t"]:
         delim_out = "\t"
     
-    # Look for file lists
-    #if files.len == 1 and files[0].endsWith(".list"):
-    #    files = openFileStream(filename = files[0], mode = fmRead)
-    # Collate collumns
+    # Collate columns
     for path in files:
         # Print header
         (header, delim) = parse_header(path)
@@ -146,8 +147,9 @@ proc stack(files: seq[string], sep: var string, delim_out: var string, header_ou
         var line_out = newSeq[string](stack_header.len - anno_col_length)
         var n = 0
         var mm: MemFile
-        mm = memfiles.open(path, mode=fmWrite, mappedSize = -1)
-        for line in lines(mm):
+        for line in stream_file(path).lines:
+            if skip_empty_lines and line.strip() == "":
+                continue
             add_annotation_cols(line_out, n, false, path, add_basename, add_filename)
             if n > 0:
                 var sep_use = sep
@@ -258,17 +260,15 @@ proc select(cols_string: string, files: seq[string], add_col: bool, sep: string,
     var added_header = false
     var line: string
 
-
     # Determine what type of selection is happening
     try:
         # If all columns are integers, we can simply output cols by index
         var select_cols = cols.mapIt(it.parseInt - 1)
 
-
         for file_n in 0..<files.len:
             var path = files[file_n]
             (columns, delim) = parse_header(path, sep)
-            var file = newFileStream(path, fmRead)
+            var file = stream_file(path)
             defer: file.close()
             for line in lines(file):
                 echo line
@@ -409,6 +409,7 @@ var p = newParser("tut"):
         option("-d", "--delimiter", help="The field separater", default="<auto>")
         option("-p", "--output-delimiter", help="Separater to output; Defaults to that found in first file", default="\t")
         option("-n", "--header", help="Output the header", default="true")
+        option("-k", "--skip-empty-lines", help="Skip empty lines", default="true")
         flag("-i", "--skip-empty", help="Skip over empty files")
         flag("-a", "--add-filename", help="Create a right-most column for the filename")
         flag("-b", "--add-basename", help="Create a right-most column for the basename")
@@ -431,7 +432,13 @@ var p = newParser("tut"):
                 else:
                     file_set.add(fname)
             var file_set_checked = parse_file_list(file_set, opts.skipEmpty)
-            stack(file_set_checked, opts.delimiter, opts.outputDelimiter, opts.header=="true",  opts.add_basename, opts.add_filename)
+            stack(file_set_checked,
+                  opts.delimiter,
+                  opts.outputDelimiter,
+                  opts.skip_empty_lines=="true",
+                  opts.header=="true",
+                  opts.add_basename,
+                  opts.add_filename)
             quit()
     command("cascade"):
         arg("files", nargs= -1, help="List files to cascade")
