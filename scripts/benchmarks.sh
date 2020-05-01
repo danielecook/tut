@@ -14,7 +14,7 @@ cd "${PARENT_DIR}" || exit 1
 nimble build
 
 # Download test data
-mkdir -p "${PARENT_DIR}/.data" && cd "${PARENT_DIR}./data"
+mkdir -p "${PARENT_DIR}/.data" && cd "${PARENT_DIR}/.data"
 if ! test -s "${PARENT_DIR}/.data/worldcitiespop_mil.csv"; then
     wget http://burntsushi.net/stuff/worldcitiespop_mil.csv
 fi;
