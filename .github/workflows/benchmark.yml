@@ -44,7 +44,7 @@ jobs:
         auto-update-conda: true
         python-version: 3.8
         activate-environment: benchmarks
-        environment-file: etc/benchmark.yml
+        environment-file: etc/env.benchmark.yml
         auto-activate-base: false
 
     - name: Conda info
@@ -53,7 +53,7 @@ jobs:
 
     - name: Build executable
       shell: bash -l {0}
-      run: nimble build
+      run: nimble build -Y
 
     - name: Benchmarks
       env:
