@@ -44,7 +44,7 @@ jobs:
 
     # Build and Test
     - name: Build executable
-      run: nimble build
+      run: nimble build -Y
 
     - name: Functional Tests
       shell: bash
