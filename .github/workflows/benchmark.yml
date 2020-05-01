@@ -58,8 +58,7 @@ jobs:
     - name: Benchmarks
       shell: bash -l {0}
       run: |
-        xsv
-        which xsv
+        export PATH="/usr/share/miniconda/envs/benchmarks/bin:${PATH}"
         bash ./scripts/benchmarks.sh
 
     - name: Upload Artifact

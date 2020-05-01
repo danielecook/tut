@@ -21,7 +21,7 @@ fi;
 
 mkdir -p "${PARENT_DIR}/benchmarks" && cd "${PARENT_DIR}/benchmarks"
 
-export PATH="${PATH}:${PARENT_DIR}"
+export PATH="${PARENT_DIR}:${PATH}"
 
 # Select a column
 hyperfine --export-csv "benchmarks/select.benchmarks.csv" \
