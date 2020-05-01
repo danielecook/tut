@@ -9,6 +9,6 @@ proc stream_file*(path: string): Stream =
         if path[^3 .. ^1] in [".gz", ".gzip"]:
             newGZFileStream(path)
         else:
-            #newFileStream(path, fmRead)
-            newMemMapFileStream(path, fmRead)
+            newFileStream(path, fmRead)
+            #newMemMapFileStream(path, fmRead)
     return stream

@@ -259,6 +259,7 @@ proc select(cols_string: string, files: seq[string], add_col: bool, sep: string,
     var added_header = false
     var line: string
     var n = 0
+    var fout: File
     
     # Determine what type of selection is happening
     try:
@@ -276,7 +277,8 @@ proc select(cols_string: string, files: seq[string], add_col: bool, sep: string,
                    add_annotation_cols(line_out, n, false, path, add_basename, add_filename)
                    for i in 0..<select_cols.len:
                        line_out[i] = ($line).split(delim)[select_cols[i]]
-                   print_row(line_out, delim)
+                   #print_row(line_out, delim)
+                   stdout.write line_out.join("\t")
             n += 1
 
     except ValueError:
