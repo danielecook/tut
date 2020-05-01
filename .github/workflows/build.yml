@@ -48,6 +48,10 @@ jobs:
 
     - name: Functional Tests
       shell: bash
+      run: sudo apt-get install bc
+
+      - name: Functional Tests
+      shell: bash
       run: bash ./scripts/functional-tests.sh
 
     - name: "Copy binary"
