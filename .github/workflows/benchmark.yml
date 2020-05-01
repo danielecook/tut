@@ -56,10 +56,11 @@ jobs:
       run: nimble build -Y
 
     - name: Benchmarks
-      env:
-        TERM: "xterm"
       shell: bash -l {0}
-      run: bash ./scripts/benchmarks.sh
+      run: |
+        xsv
+        which xsv
+        bash ./scripts/benchmarks.sh
 
     - name: Upload Artifact
       if: success()
