@@ -27,6 +27,6 @@ export PATH="${PARENT_DIR}:${PATH}"
 hyperfine --export-csv "benchmarks/select.benchmarks.csv" \
           --export-markdown "benchmarks/select.md" \
           --runs 10 \
-         "xsv select 2 worldcitiespop_mil.csv > out.select.txt" \
-         "tut select 2 worldcitiespop_mil.csv > out.select.txt" \
-         "csvtk cut -f 2 worldcitiespop_mil.csv > out.select.txt"
+         "xsv select 2 ${PARENT_DIR}/.data/worldcitiespop_mil.csv > out.select.txt" \
+         "tut select 2 ${PARENT_DIR}/.data/worldcitiespop_mil.csv > out.select.txt" \
+         "csvtk cut -f 2 ${PARENT_DIR}/.data/worldcitiespop_mil.csv > out.select.txt"
