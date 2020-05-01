@@ -46,11 +46,11 @@ jobs:
     - name: Build executable
       run: nimble build -Y
 
-    - name: Functional Tests
+    - name: Install bc
       shell: bash
       run: sudo apt-get install bc
 
-      - name: Functional Tests
+    - name: Functional Tests
       shell: bash
       run: bash ./scripts/functional-tests.sh
 
