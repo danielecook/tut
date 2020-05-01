@@ -1,0 +1,63 @@
+name: Build & Test
+
+on: 
+  - push
+  - pull_request
+
+jobs:
+  build:
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-16.04, macos-10.15]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    # Caching
+    - name: Cache choosenim
+      id: cache-choosenim
+      uses: actions/cache@v1
+      with:
+        path: ~/.choosenim
+        key: ${{ runner.os }}-choosenim-stable
+
+    - name: Cache nimble
+      id: cache-nimble
+      uses: actions/cache@v1
+      with:
+        path: ~/.nimble
+        key: ${{ runner.os }}-nimble-stable
+
+    - name: Cache test data
+      id: cache-test-data
+      uses: actions/cache@v1
+      with:
+        path: ~/.data
+        key: data
+
+    # Setup nim
+    - uses: jiro4989/setup-nim-action@v1.0.2
+      with:
+          nim-version: 1.0.6
+
+    # Build and Test
+    - name: Build executable
+      run: nimble build
+
+    - name: Functional Tests
+      shell: bash
+      run: bash ./scripts/functional-tests.sh
+
+    - name: "Copy binary"
+      run: chmod +x tut && mkdir bin && cp tut bin/tut_${{ matrix.os }}
+
+    #- run: nimble test -Y
+    - name: Upload Artifact
+      if: success()
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        # Artifact name
+        name: tut_${{ matrix.os }}
+        path: bin

@@ -1,0 +1,69 @@
+name: Benchmark
+
+on: 
+  - push
+  - pull_request
+
+
+jobs:
+  build:
+    runs-on: ubuntu-16.04
+    
+    steps:
+    - uses: actions/checkout@v2
+
+    # Caching
+    - name: Cache choosenim
+      id: cache-choosenim
+      uses: actions/cache@v1
+      with:
+        path: ~/.choosenim
+        key: choosenim-stable
+
+    - name: Cache nimble
+      id: cache-nimble
+      uses: actions/cache@v1
+      with:
+        path: ~/.nimble
+        key: nimble-stable
+
+    - name: Cache test data
+      id: cache-test-data
+      uses: actions/cache@v1
+      with:
+        path: ~/.data
+        key: data
+
+    # Setup nim
+    - uses: jiro4989/setup-nim-action@v1.0.2
+      with:
+          nim-version: 1.0.6
+
+    - uses: goanpeca/setup-miniconda@v1
+      with:
+        auto-update-conda: true
+        python-version: 3.8
+        activate-environment: benchmarks
+        environment-file: etc/benchmark.yml
+        auto-activate-base: false
+
+    - name: Conda info
+      shell: bash -l {0}
+      run: which conda
+
+    - name: Build executable
+      shell: bash -l {0}
+      run: nimble build
+
+    - name: Benchmarks
+      env:
+        TERM: "xterm"
+      shell: bash -l {0}
+      run: bash ./scripts/benchmarks.sh
+
+    - name: Upload Artifact
+      if: success()
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        name: "benchmarks"
+        path: "benchmarks/*.csv"
