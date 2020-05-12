@@ -41,7 +41,7 @@ assert_in_stderr "Malformed range"
 run slice_add_col tut slice -b 0:3 tests/data/*.tsv
 assert_exit_code 0
 assert_in_stdout "basename"
-assert_equal "$(cut -f 1 "${STDOUT_FILE}" | uniq | line_count - )" "9"
+assert_equal "$(cut -f 1 "${STDOUT_FILE}" | uniq | line_count /dev/stdin )" "9"
 assert_equal "$(cut -f 7 "${STDOUT_FILE}" | head -n 1)" "basename"
 assert_equal "$(cut -f 7 "${STDOUT_FILE}" | head -n 2 | tail -n 1)" "df1.tsv"
 
@@ -59,7 +59,7 @@ assert_in_stdout "cyl"
 # select missing column
 run select_2 tut select mpg tests/data/df3.tsv
 assert_in_stdout "mpg" # header should be included
-assert_equal "$(uniq "${STDOUT_FILE}" | line_count - )" "2"
+assert_equal "$(uniq "${STDOUT_FILE}" | line_count /dev/stdin )" "2"
 
 # basename
 run select_3 tut select -b mpg tests/data/df1.tsv
