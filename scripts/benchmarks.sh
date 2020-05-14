@@ -11,7 +11,7 @@ trap cleanup EXIT
 
 PARENT_DIR="$(git rev-parse --show-toplevel)" 
 cd "${PARENT_DIR}" || exit 1
-nimble build
+nimble install
 
 # Download test data
 mkdir -p "${PARENT_DIR}/.data" && cd "${PARENT_DIR}/.data"
@@ -28,5 +28,4 @@ hyperfine --export-csv "benchmarks/select.benchmarks.csv" \
           --export-markdown "benchmarks/select.md" \
           --runs 10 \
          "xsv select 2 ${PARENT_DIR}/.data/worldcitiespop_mil.csv > out.select.txt" \
-         "tut select 2 ${PARENT_DIR}/.data/worldcitiespop_mil.csv > out.select.txt" \
-         "csvtk cut -f 2 ${PARENT_DIR}/.data/worldcitiespop_mil.csv > out.select.txt"
+         "tut select 2 ${PARENT_DIR}/.data/worldcitiespop_mil.csv > out.select.txt"

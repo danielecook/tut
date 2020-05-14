@@ -55,7 +55,6 @@ assert_in_stdout "model"
 assert_in_stdout "mpg"
 assert_in_stdout "cyl"
 
-
 # select missing column
 run select_2 tut select mpg tests/data/df3.tsv
 assert_in_stdout "mpg" # header should be included
