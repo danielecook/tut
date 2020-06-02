@@ -1,27 +1,15 @@
 import sequtils
 import helpers
-
-import strformat
 import parsecsv
-
-
 import strutils
 import streams
-
-
-
-from math import sum
-
 
 proc select*(cols_string: string, files: seq[string], add_col: bool, sep: string, add_basename: bool, add_filename: bool) =
     let cols = cols_string.split(",")
     var delim: string
     var columns: seq[string]
     var line_out = newSeq[string](cols.len)
-    var added_header = false
-    var line: string
     var n = 0
-    var fout: File
 
     var csv: CsvParser
     

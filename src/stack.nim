@@ -47,7 +47,6 @@ proc stack*(files: seq[string], sep: var string, delim_out: var string, skip_emp
                 continue
             add_annotation_cols(line_out, n, false, path, add_basename, add_filename)
             if n > 0:
-                var sep_use = sep
                 var cols: seq[string]
                 for x in line.split(sep):
                     cols.add x.strip(chars = {'\"', '\''})

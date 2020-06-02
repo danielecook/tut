@@ -7,13 +7,10 @@ import strformat
 import strutils
 import tables
 import streams
-import terminal
-import parseutils
 import memfiles
 
 import src/stack
 import src/select
-from math import sum
 
 import src/helpers
 
@@ -80,7 +77,6 @@ proc wc(fn: string): tuple[linec, wordc, bytec: int] =
     var cs: cstring
     var linec, wordc, bytec: int
     var inWord: bool
-    var s: string
     for slice in memSlices(mf):
       inc(linec)
       cs = cast[cstring](slice.data)
@@ -282,7 +278,7 @@ else:
         if opts.row_numbers:
             PRINT_RN = true
         p.run(input_params)
-    except UsageError as E:
+    except UsageError:
         input_params.add("-h")
         p.run(input_params)
     except Exception as E:
